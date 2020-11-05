@@ -11,14 +11,24 @@ package htlgrieskirchen.po3.tsturm18;
  */
 public class Tag {
 
-    private String value;
-    private String fullStartTag;
-
     private String tag;
     private String content;
 
+    private boolean valid;
+
     public Tag(String value) {
 
+    }
+
+    public String getContent() {
+        if (valid) {
+            if (content == null || content.equals("")) {
+                return tag + ": hat keinen Inhalt";
+            }
+            return content;
+        } else {
+            return tag + " Fehler";
+        }
     }
 
 }
