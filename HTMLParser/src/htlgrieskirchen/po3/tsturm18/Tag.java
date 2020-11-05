@@ -17,7 +17,24 @@ public class Tag {
     private boolean valid;
 
     public Tag(String value) {
+        valid = false;
 
+        if (value.startsWith("<") && value.endsWith(">")) {
+            String[] splited = value.split(">");
+            String firstTag = splited[0] + ">";
+            tag = firstTag.substring(1, firstTag.length() - 1);
+
+            if (value.endsWith("</" + tag + ">")) {
+                valid = true;
+                content = value.substring(firstTag.length(), value.length() - (tag.length() + 3));
+            }
+
+            if (value.equals(firstTag)) {
+                valid = true;
+            }
+        } else {
+            content = value;
+        }
     }
 
     public String getContent() {
