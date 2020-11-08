@@ -83,11 +83,12 @@ public class HTMLCallable implements Callable<TagString> {
                     stringBuilder.append(content.charAt(tagIndex));
                 }
                 stringBuilder.append(">");
-                i = tagIndex;
+
                 StringBuilder innerStrinngBuilder = new StringBuilder();
+                i = tagIndex;
                 int innerTags = 1;
 
-                for (int j = tagIndex + 1; j < content.length(); j++) {
+                for (int j = i + 1; j < content.length(); j++) {
 
                     if (content.charAt(j) == '<' && content.charAt(j + 1) != '/') {
 
@@ -103,11 +104,11 @@ public class HTMLCallable implements Callable<TagString> {
                                 stringBuilder.append(content.charAt(j));
                             }
                             stringBuilder.append(">");
-                            i = j;
 
                             splittedContent.add(new TagString(prio, stringBuilder.toString()));
                             prio++;
                             stringBuilder = new StringBuilder();
+                            i = j;
                             break;
                         } else {
                             innerStrinngBuilder.append(content.charAt(j));
@@ -130,7 +131,7 @@ public class HTMLCallable implements Callable<TagString> {
             }
 
         }
-        if (!stringBuilder.toString().trim().equals("") && !splittedContent.contains(stringBuilder.toString())) {
+        if (!stringBuilder.toString().equals("")) {
             splittedContent.add(new TagString(prio, stringBuilder.toString()));
         }
 
