@@ -12,39 +12,37 @@ package htlgrieskirchen.po3.tsturm18;
 public class Tag {
 
     private String tag;
-    private String content;
+    private String inTagContent;
 
-    private boolean valid;
+    private boolean hasError;
 
-    public Tag(String value) {
-        valid = false;
+    public Tag(String fullContent) {
+        hasError = true;
 
-        if (value.startsWith("<") && value.endsWith(">")) {
-            String[] splited = value.split(">");
-            String firstTag = splited[0] + ">";
+        if (fullContent.startsWith("<") && fullContent.endsWith(">")) {
+            String[] splittedValue = fullContent.split(">");
+            String firstTag = splittedValue[0] + ">";
             tag = firstTag.substring(1, firstTag.length() - 1);
 
-            if (value.endsWith("</" + tag + ">")) {
-                valid = true;
-                content = value.substring(firstTag.length(), value.length() - (tag.length() + 3));
-            }
-
-            if (value.equals(firstTag)) {
-                valid = true;
+            if (fullContent.endsWith("</" + tag + ">")) {
+                hasError = false;
+                inTagContent = fullContent.substring(firstTag.length(), fullContent.length() - (tag.length() + 3));
             }
         } else {
-            content = value;
+            hasError = false;
+            inTagContent = fullContent;
         }
     }
 
     public String getContent() {
-        if (valid) {
-            if (content == null || content.equals("")) {
-                return tag + ": hat keinen Inhalt";
+
+        if (!hasError) {
+            if (inTagContent == null || inTagContent.equals("")) {
+                return "\n" + tag + " hat keinen Inhalt";
             }
-            return content;
+            return "\n" + inTagContent;
         } else {
-            return tag + " Fehler";
+            return "\n" + tag + " Fehler";
         }
     }
 
