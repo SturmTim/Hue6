@@ -25,46 +25,40 @@ public class Main {
 
     public static void main(String[] args) {
 
-        ExecutorService executor = Executors.newCachedThreadPool();
-
-        List<TagString> tagList = new ArrayList<>();
         try {
-            tagList = HTMLCallable.getSplittedContent(readFile(file));
-        } catch (IOException e) {
-            System.out.println("IOException");
-        }
+            ExecutorService executor = Executors.newCachedThreadPool();
 
-        List<HTMLCallable> callableList = new ArrayList<>();
-        for (TagString string : tagList) {
-            callableList.add(new HTMLCallable(string.getTagPriority(), new Tag(string.getFullString())));
-        }
+            List<TagString> tagList;
+            List<HTMLCallable> callableList = new ArrayList<>();
+            List<Future<TagString>> result;
 
-        List<Future<TagString>> result = new ArrayList<>();
-        try {
+            String htmlCode = Files.lines(file.toPath())
+                    .reduce((string1, string2) -> string1 + string2)
+                    .orElse("");
+
+            tagList = Tag.getSplittedContent(htmlCode);
+
+            tagList.forEach(string -> {
+                callableList.add(new HTMLCallable(string.getTagPriority(), new Tag(string.getFullString())));
+            });
+
             result = executor.invokeAll(callableList);
-        } catch (InterruptedException e) {
-            System.out.println("InterruptedException");
+
+            result.stream().map(ergebniss -> {
+                try {
+                    return ergebniss.get();
+                } catch (InterruptedException | ExecutionException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }).sorted()
+                    .map(prioritisedString -> prioritisedString.getFullString())
+                    .forEach(System.out::print);
+
+            System.out.print("\n");
+            executor.shutdown();
+        } catch (IOException | InterruptedException ex) {
+            ex.printStackTrace();
         }
-
-        result.stream()
-                .map(ergebniss -> {
-                    try {
-                        return ergebniss.get();
-                    } catch (InterruptedException | ExecutionException e) {
-                        e.printStackTrace();
-                    }
-                    return null;
-                }).sorted()
-                .map(prioritisedString -> prioritisedString.getFullString())
-                .forEach(System.out::print);
-
-        System.out.print("\n");
-        executor.shutdown();
-    }
-
-    private static String readFile(File file) throws IOException {
-        return Files.lines(file.toPath())
-                .reduce((string1, string2) -> string1 + string2)
-                .orElse("");
     }
 }

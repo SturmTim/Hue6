@@ -5,6 +5,9 @@
  */
 package htlgrieskirchen.po3.tsturm18;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  *
  * @author timst
@@ -14,10 +17,9 @@ public class Tag {
     private String tag;
     private String inTagContent;
 
-    private boolean hasError;
+    private boolean hasError = true;
 
     public Tag(String fullContent) {
-        hasError = true;
 
         if (fullContent.startsWith("<") && fullContent.endsWith(">")) {
             String[] splittedValue = fullContent.split(">");
@@ -25,8 +27,8 @@ public class Tag {
             tag = firstTag.substring(1, firstTag.length() - 1);
 
             if (fullContent.endsWith("</" + tag + ">")) {
-                hasError = false;
                 inTagContent = fullContent.substring(firstTag.length(), fullContent.length() - (tag.length() + 3));
+                hasError = false;
             }
         } else {
             hasError = false;
@@ -35,15 +37,87 @@ public class Tag {
     }
 
     public String getContent() {
-
         if (!hasError) {
             if (inTagContent == null || inTagContent.equals("")) {
-                return "\n" + tag + " hat keinen Inhalt";
+                return tag + " hat keinen Inhalt" + "\n";
             }
-            return "\n" + inTagContent;
+            return inTagContent + "\n";
         } else {
-            return "\n" + tag + " Fehler";
+            return tag + " enthält einen Fehler" + "\n";
         }
+    }
+
+    public static List<TagString> getSplittedContent(String content) {
+
+        List<TagString> splittedContent = new ArrayList<>();
+        int prio = 1;
+
+        StringBuilder stringBuilder = new StringBuilder();
+
+        for (int i = 0; i < content.length(); i++) {
+
+            if (i + 1 < content.length() && content.charAt(i) == '<' && content.charAt(i + 1) != '/') {
+
+                if (stringBuilder.toString().equals("") == false) {
+                    splittedContent.add(new TagString(prio, stringBuilder.toString()));
+                    prio++;
+                    stringBuilder = new StringBuilder();
+                }
+
+                for (; content.charAt(i) != '>'; i++) {
+                    stringBuilder.append(content.charAt(i));
+                }
+                stringBuilder.append(">");
+
+                StringBuilder innerTagContent = new StringBuilder();
+
+                int innerTags = 0;
+
+                for (int j = i + 1; j < content.length(); j++) {
+
+                    if (content.charAt(j) == '<' && content.charAt(j + 1) == '/') {
+                        innerTags--;
+                        if (innerTags < 0) {
+                            stringBuilder.append(innerTagContent.toString());
+                            for (; content.charAt(j) != '>'; j++) {
+                                stringBuilder.append(content.charAt(j));
+                            }
+                            stringBuilder.append(">");
+
+                            splittedContent.add(new TagString(prio, stringBuilder.toString()));
+                            prio++;
+                            stringBuilder = new StringBuilder();
+                            i = j;
+                            break;
+                        } else {
+                            innerTagContent.append(content.charAt(j));
+                        }
+
+                    } else if (content.charAt(j) == '<' && content.charAt(j + 1) != '/') {
+                        innerTagContent.append(content.charAt(j));
+                        innerTags++;
+                    } else {
+
+                        innerTagContent.append(content.charAt(j));
+                    }
+                }
+                if (stringBuilder.toString().equals("") == false) {
+                    splittedContent.add(new TagString(prio, stringBuilder.toString()));
+                    prio++;
+                    stringBuilder = new StringBuilder();
+                }
+
+            } else {
+                stringBuilder.append(content.charAt(i));
+            }
+
+        }
+        if (stringBuilder.toString().equals("") == false) {
+            splittedContent.add(new TagString(prio, stringBuilder.toString()));
+            prio++;
+        }
+
+        return splittedContent;
     }
 
 }

@@ -31,7 +31,7 @@ public class HTMLCallable implements Callable<TagString> {
     public TagString call() throws Exception {
         ExecutorService executor = Executors.newCachedThreadPool();
 
-        List<TagString> splittetContent = getSplittedContent(tag.getContent());
+        List<TagString> splittetContent = Tag.getSplittedContent(tag.getContent());
 
         List<HTMLCallable> callableList = new ArrayList<>();
         for (int i = 0; i < splittetContent.size(); i++) {
@@ -56,86 +56,11 @@ public class HTMLCallable implements Callable<TagString> {
         executor.shutdown();
 
         StringBuilder ergebniss = new StringBuilder();
-        splittetContent.forEach(prioritisedString -> ergebniss.append(prioritisedString.getFullString()));
+        splittetContent.forEach((tagString) -> {
+            ergebniss.append(tagString.getFullString());
+        });
         TagString tagString = new TagString(priority, ergebniss.toString());
         return tagString;
-    }
-
-    public static List<TagString> getSplittedContent(String content) {
-
-        List<TagString> splittedContent = new ArrayList<>();
-        int prio = 1;
-
-        StringBuilder stringBuilder = new StringBuilder();
-
-        for (int i = 0; i < content.length(); i++) {
-
-            if (i + 1 < content.length() && content.charAt(i) == '<' && content.charAt(i + 1) != '/') {
-
-                if (!stringBuilder.toString().equals("")) {
-                    splittedContent.add(new TagString(prio, stringBuilder.toString()));
-                    prio++;
-                }
-                stringBuilder = new StringBuilder();
-
-                int tagIndex;
-                for (tagIndex = i; content.charAt(tagIndex) != '>'; tagIndex++) {
-                    stringBuilder.append(content.charAt(tagIndex));
-                }
-                stringBuilder.append(">");
-
-                StringBuilder innerStrinngBuilder = new StringBuilder();
-                i = tagIndex;
-                int innerTags = 1;
-
-                for (int j = i + 1; j < content.length(); j++) {
-
-                    if (content.charAt(j) == '<' && content.charAt(j + 1) != '/') {
-
-                        innerStrinngBuilder.append(content.charAt(j));
-                        innerTags++;
-
-                    } else if (content.charAt(j) == '<' && content.charAt(j + 1) == '/') {
-
-                        innerTags--;
-                        if (innerTags == 0) {
-                            stringBuilder.append(innerStrinngBuilder.toString());
-                            for (j = j; content.charAt(j) != '>'; j++) {
-                                stringBuilder.append(content.charAt(j));
-                            }
-                            stringBuilder.append(">");
-
-                            splittedContent.add(new TagString(prio, stringBuilder.toString()));
-                            prio++;
-                            stringBuilder = new StringBuilder();
-                            i = j;
-                            break;
-                        } else {
-                            innerStrinngBuilder.append(content.charAt(j));
-                        }
-
-                    } else {
-
-                        innerStrinngBuilder.append(content.charAt(j));
-
-                    }
-                }
-                if (!stringBuilder.toString().equals("")) {
-                    splittedContent.add(new TagString(prio, stringBuilder.toString()));
-                    prio++;
-                    stringBuilder = new StringBuilder();
-                }
-
-            } else {
-                stringBuilder.append(content.charAt(i));
-            }
-
-        }
-        if (!stringBuilder.toString().equals("")) {
-            splittedContent.add(new TagString(prio, stringBuilder.toString()));
-        }
-
-        return splittedContent;
     }
 
 }
